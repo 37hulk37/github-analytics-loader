@@ -1,0 +1,34 @@
+services:
+#  app:
+#    container_name: loader-service
+#    build: .
+#    depends_on:
+#      postgres:
+#        condition: service_started
+#      minio:
+#        condition: service_started
+#    networks:
+#      - loader-network
+#    ports:
+#      - "8080:8080"
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - 'minio-data:/data'
+    networks:
+      - loader-network
+    environment:
+      - MINIO_ROOT_USER=root
+      - MINIO_ROOT_PASSWORD=12345678
+
+
+volumes:
+  minio-data:
+
+networks:
+  loader-network:
