@@ -1,9 +1,22 @@
 spring:
+  liquibase:
+    change-log: classpath:changelog/db.changelog-master.yaml
   application:
     name: loader
+  batch:
+    jdbc:
+      initialize-schema: never
+    job:
+      enabled: false
+  datasource:
+    url: jdbc:postgresql://localhost:5432/loader-service
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
 
 app:
-  api-key: ${API_KEY:some_key}
+  api-key: ${API_KEY:ghp_secret}
   local:
     save-always: true
     directory: "./data/backlog"
@@ -14,3 +27,7 @@ app:
     url: ${MINIO_URL:http://localhost:9000}
     bucket-name: repositories
     records-per-file: 1000
+
+logging:
+  level:
+    com.hulk: DEBUG

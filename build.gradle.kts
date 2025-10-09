@@ -32,7 +32,7 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web") //todo: maybe change to some other
-//    implementation("org.springframework.boot:spring-boot-starter-batch")
+    implementation("org.springframework.boot:spring-boot-starter-batch")
 //    implementation("org.springframework.boot:spring-boot-starter-data-elasticsearch")
     implementation("org.springframework.kafka:spring-kafka")
 
@@ -46,6 +46,9 @@ dependencies {
 
     implementation("org.kohsuke:github-api:2.0-rc.5")
     implementation("io.minio:minio:8.5.17")
+
+    runtimeOnly("org.postgresql:postgresql")
+    implementation("org.liquibase:liquibase-core")
 }
 
 tasks.withType<Test> {
