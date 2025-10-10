@@ -22,11 +22,18 @@ configurations {
 
 repositories {
     mavenCentral()
+    maven {
+        url = uri("https://repo.jenkins-ci.org/releases/")
+    }
+    maven {
+        url = uri("https://repo.jenkins-ci.org/public/")
+    }
 }
 
 dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-web") //todo: maybe change to some other
     implementation("org.springframework.boot:spring-boot-starter-batch")
-    implementation("org.springframework.boot:spring-boot-starter-data-elasticsearch")
+//    implementation("org.springframework.boot:spring-boot-starter-data-elasticsearch")
     implementation("org.springframework.kafka:spring-kafka")
 
     compileOnly("org.projectlombok:lombok")
@@ -36,6 +43,12 @@ dependencies {
     testImplementation("org.springframework.batch:spring-batch-test")
     testImplementation("org.springframework.kafka:spring-kafka-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    implementation("org.kohsuke:github-api:2.0-rc.5")
+    implementation("io.minio:minio:8.5.17")
+
+    runtimeOnly("org.postgresql:postgresql")
+    implementation("org.liquibase:liquibase-core")
 }
 
 tasks.withType<Test> {
