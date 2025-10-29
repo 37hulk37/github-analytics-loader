@@ -1,6 +1,8 @@
-package com.hulk.loader.batch;
+package com.hulk.loader.configuration;
 
 import com.hulk.loader.RepositoryBasicDto;
+import com.hulk.loader.batch.GithubClientReader;
+import com.hulk.loader.batch.GithubWriter;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -29,7 +31,7 @@ public class BatchConfig {
         JobRepository jobRepository,
         PlatformTransactionManager transactionManager,
         GithubClientReader reader,
-        MinioItemWriter writer) {
+        GithubWriter writer) {
         return new StepBuilder("githubStep", jobRepository)
             .<RepositoryBasicDto, RepositoryBasicDto>chunk(100, transactionManager) // Обрабатываем по 2 записи за раз
             .reader(reader)

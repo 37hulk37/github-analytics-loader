@@ -4,7 +4,6 @@ spring:
   application:
     name: loader
   batch:
-
     jdbc:
       initialize-schema: never
     job:
@@ -14,16 +13,26 @@ spring:
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
+  kafka:
+    producer:
+      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:29092}
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties:
+        linger.ms: ${PRODUCER_LINGER_MS:20}
+        batch.size: ${PRODUCER_BATCH_SIZE:200}
 
 
 app:
+  kafka:
+    topic: gh-repositories
   executor:
     max-pool-size: ${MAX_POOL_SIZE:8}
   # Comma-separated list of tokens. Example: "token1,token2,token3"
   api-keys: ${API_KEYS:}
   api-key: ${API_KEY:}
   local:
-    save-always: true
+    save-always: false
     directory: "./data/backlog"
 
   minio:
