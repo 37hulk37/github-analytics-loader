@@ -6,16 +6,23 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.core.launch.support.TaskExecutorJobLauncher;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 @EnableBatchProcessing
 public class BatchConfig {
 
+    @Value("${app.executor.max-pool-size}")
+    private Integer maxPoolSize;
 
     @Bean
     public Step githubStep(
@@ -41,9 +48,24 @@ public class BatchConfig {
     }
 
     @Bean
-    public JobLauncherService githubJobLauncher(JobLauncher jobLauncher, Job githubJob) {
-        return new JobLauncherService(jobLauncher, githubJob);
+    public TaskExecutor batchTaskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(maxPoolSize);
+        executor.setThreadNamePrefix("job-exec-");
+        executor.initialize();
+        return executor;
     }
 
-    //todo: add task executor for parallel computing
+    @Bean
+    public JobLauncher jobLauncher(
+        @Qualifier("batchTaskExecutor") TaskExecutor taskExecutor,
+        JobRepository jobRepository
+    ) throws Exception {
+        var jobLauncher = new TaskExecutorJobLauncher();
+        jobLauncher.setTaskExecutor(taskExecutor);
+        jobLauncher.setJobRepository(jobRepository);
+        jobLauncher.afterPropertiesSet();
+        return jobLauncher;
+    }
 }

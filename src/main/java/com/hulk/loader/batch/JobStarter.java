@@ -12,6 +12,7 @@ public class JobStarter implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         jobLauncherService.startGithubJob("2024-01-01");
+        jobLauncherService.startGithubJob("2024-01-02");
     }
 
     //todo: change to create a queue of dates

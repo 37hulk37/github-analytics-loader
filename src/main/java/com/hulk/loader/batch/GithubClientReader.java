@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
-import org.kohsuke.github.GitHubBuilder;
 import org.kohsuke.github.PagedSearchIterable;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemReader;
@@ -21,11 +20,10 @@ import java.util.Iterator;
 @Component
 public class GithubClientReader implements ItemReader<RepositoryBasicDto> {
 
-    private GitHub gitHub; //todo: use several accounts
+    private GitHub gitHub; // token rotation via GithubTokenProvider
     private Iterator<GHRepository> repositoryIterator;
 
-    @Value("${app.api-key}")
-    private String apiKey;
+    private final GithubTokenProvider tokenProvider;
 
     @Value("#{jobParameters['searchDate']}")
     private String searchDate;
@@ -41,9 +39,6 @@ public class GithubClientReader implements ItemReader<RepositoryBasicDto> {
 
         if (repositoryIterator != null && repositoryIterator.hasNext()) {
             var repo = repositoryIterator.next();
-//            var commits = gitHub.searchCommits().q(
-//                String.format("repo:%s author-date:>2000-01-01", repo.getFullName())
-//            ).list().getTotalCount(); //todo: commit search is too long, need to implement parallel read
             log.debug("Add repo {}", repo.getFullName());
             return RepositoryBasicDto.fromGHRepository(repo, -1);
         }
@@ -52,7 +47,7 @@ public class GithubClientReader implements ItemReader<RepositoryBasicDto> {
     }
 
     private void initializeData() throws Exception {
-        this.gitHub = new GitHubBuilder().withOAuthToken(apiKey).build();
+        this.gitHub = tokenProvider.nextClient();
 
         if (searchDate == null) {
             throw new UnexpectedInputException("searchDate is required");
