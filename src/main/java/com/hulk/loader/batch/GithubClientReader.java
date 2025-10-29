@@ -48,6 +48,7 @@ public class GithubClientReader implements ItemReader<RepositoryBasicDto> {
 
     private void initializeData() throws Exception {
         this.gitHub = tokenProvider.nextClient();
+        log.info("GitHub data initialized for date: {}", searchDate);
 
         if (searchDate == null) {
             throw new UnexpectedInputException("searchDate is required");
@@ -58,7 +59,5 @@ public class GithubClientReader implements ItemReader<RepositoryBasicDto> {
             .withPageSize(100);
 
         this.repositoryIterator = searchResult.iterator();
-
-        log.info("GitHub data initialized for date: {}", searchDate);
     }
 }

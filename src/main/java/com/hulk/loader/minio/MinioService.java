@@ -1,4 +1,4 @@
-package com.hulk.loader.batch;
+package com.hulk.loader.minio;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,21 +8,18 @@ import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.item.Chunk;
-import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
-@StepScope
 @RequiredArgsConstructor
 @Component
-public class MinioItemWriter implements ItemWriter<RepositoryBasicDto> {
+public class MinioService {
     private final ObjectMapper objectMapper;
     private final MinioClient minioClient;
     private final LocalStorageManager localStorageManager;
@@ -33,16 +30,10 @@ public class MinioItemWriter implements ItemWriter<RepositoryBasicDto> {
     @Value("${app.local.save-always}")
     private boolean saveAlways;
 
-    @Value("#{jobParameters['searchDate']}")
-    private String searchDate;
-
-    @Override
-    public void write(Chunk<? extends RepositoryBasicDto> chunk) throws Exception {
-
-        var items = chunk.getItems();
+    public void writeToMinio(List<RepositoryBasicDto> list, String searchDate) throws Exception {
         String repoString;
         try {
-            repoString = objectMapper.writeValueAsString(items);
+            repoString = objectMapper.writeValueAsString(list);
         } catch (JsonProcessingException e) {
             log.error("Error while writing repositories as json", e);
             throw new RuntimeException(e);
@@ -67,6 +58,6 @@ public class MinioItemWriter implements ItemWriter<RepositoryBasicDto> {
             localStorageManager.store(fileName, repoString.getBytes(StandardCharsets.UTF_8));
         }
 
-        log.info("Successfully saved file: {}", fileName);
+        log.debug("Successfully saved file: {}", fileName);
     }
 }

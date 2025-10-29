@@ -31,7 +31,7 @@ repositories {
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-web") //todo: maybe change to some other
+    implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-batch")
 //    implementation("org.springframework.boot:spring-boot-starter-data-elasticsearch")
     implementation("org.springframework.kafka:spring-kafka")
@@ -49,6 +49,8 @@ dependencies {
 
     runtimeOnly("org.postgresql:postgresql")
     implementation("org.liquibase:liquibase-core")
+
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5")
 }
 
 tasks.withType<Test> {
