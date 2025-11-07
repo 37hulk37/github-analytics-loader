@@ -33,7 +33,7 @@ public class BatchConfig {
         GithubClientReader reader,
         GithubWriter writer) {
         return new StepBuilder("githubStep", jobRepository)
-            .<RepositoryBasicDto, RepositoryBasicDto>chunk(100, transactionManager) // Обрабатываем по 2 записи за раз
+            .<RepositoryBasicDto, RepositoryBasicDto>chunk(100, transactionManager)
             .reader(reader)
             .writer(writer)
             .build();
@@ -52,7 +52,7 @@ public class BatchConfig {
     @Bean
     public TaskExecutor batchTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(2);
+        executor.setCorePoolSize(maxPoolSize);
         executor.setMaxPoolSize(maxPoolSize);
         executor.setThreadNamePrefix("job-exec-");
         executor.initialize();
