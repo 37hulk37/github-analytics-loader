@@ -33,7 +33,7 @@ public class BatchConfig {
         GithubClientReader reader,
         GithubWriter writer) {
         return new StepBuilder("githubStep", jobRepository)
-            .<RepositoryBasicDto, RepositoryBasicDto>chunk(100, transactionManager)
+            .<RepositoryBasicDto, RepositoryBasicDto>chunk(500, transactionManager)
             .reader(reader)
             .writer(writer)
             .build();
