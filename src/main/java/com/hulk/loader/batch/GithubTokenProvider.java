@@ -17,13 +17,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Component
 public class GithubTokenProvider {
 
-    private final List<String> tokens;
+    private final List<GitHub> clients;
     private final AtomicInteger currentIndex = new AtomicInteger(0);
 
     public GithubTokenProvider(
         @Value("${app.api-keys:}") String apiKeysCsv,
         @Value("${app.api-key:}") String singleApiKey
-    ) {
+    ) throws IOException {
         List<String> prepared = new ArrayList<>();
 
         if (apiKeysCsv != null && !apiKeysCsv.isBlank()) {
@@ -43,23 +43,30 @@ public class GithubTokenProvider {
             log.warn("No GitHub API keys provided. Requests will be unauthenticated and heavily rate-limited.");
         }
 
-        this.tokens = Collections.unmodifiableList(prepared);
-        if (!tokens.isEmpty()) {
-            log.info("Initialized GitHub token provider with {} token(s).", tokens.size());
+        List<GitHub> initializedClients = new ArrayList<>();
+        if (prepared.isEmpty()) {
+            initializedClients.add(GitHubBuilder.fromEnvironment().build());
+        } else {
+            for (String token : prepared) {
+                GitHub client = new GitHubBuilder()
+                    .withOAuthToken(token)
+                    .withAbuseLimitHandler(GitHubAbuseLimitHandler.WAIT)
+                    .build();
+                initializedClients.add(client);
+            }
+            log.info("Initialized GitHub token provider with {} client(s).", initializedClients.size());
         }
+
+        this.clients = Collections.unmodifiableList(initializedClients);
     }
 
-    public GitHub nextClient() throws IOException {
-        if (tokens.isEmpty()) {
-            return GitHubBuilder.fromEnvironment().build();
+    public synchronized GitHub nextClient() {
+        if (clients.isEmpty()) {
+            throw new IllegalStateException("No GitHub clients available");
         }
 
-        int index = Math.floorMod(currentIndex.getAndIncrement(), tokens.size());
-        String token = tokens.get(index);
-        return new GitHubBuilder()
-            .withOAuthToken(token)
-            .withAbuseLimitHandler(GitHubAbuseLimitHandler.WAIT)
-            .build();
+        int index = Math.floorMod(currentIndex.getAndIncrement(), clients.size());
+        return clients.get(index);
     }
 }
 

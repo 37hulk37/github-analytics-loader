@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -18,7 +19,7 @@ public class LoaderController {
     private final JobService jobService;
 
     @PostMapping("/job/start")
-    public List<Pair<LocalDate, Boolean>> startJob(@RequestBody StartJobRequest request) {
+    public List<Pair<LocalDateTime, Boolean>> startJob(@RequestBody StartJobRequest request) {
         return jobService.startSeveralJobs(request.from, request.to);
     }
 

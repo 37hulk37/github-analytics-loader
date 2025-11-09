@@ -7,9 +7,11 @@ import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @Component
@@ -17,9 +19,9 @@ import java.util.stream.Stream;
 @Slf4j
 public class JobService {
     private final JobLauncherService jobLauncherService;
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    public List<Pair<LocalDate, Boolean>> startSeveralJobs(LocalDate from, LocalDate to) {
+    public List<Pair<LocalDateTime, Boolean>> startSeveralJobs(LocalDate from, LocalDate to) {
         if (from.isAfter(to)) {
             throw new ApplicationException("'from' must be after 'to'");
         }
@@ -32,13 +34,14 @@ public class JobService {
 
         return Stream.iterate(from, date -> date.plusDays(1))
             .limit(jobCount)
+            .flatMap(date -> IntStream.range(0, 24).mapToObj(hour -> date.atTime(hour, 0)))
             .map(date -> Pair.of(date, startJob(date)))
             .toList();
     }
 
-    public boolean startJob(LocalDate date) {
+    public boolean startJob(LocalDateTime date) {
         try {
-            jobLauncherService.startGithubJob(formatter.format(date));
+            jobLauncherService.startGithubJob(dateTimeFormatter.format(date));
             return true;
         } catch (Exception e) {
             log.error(e.getMessage(), e);
