@@ -37,6 +37,7 @@ public class GithubClientReader implements ItemReader<RepositoryBasicDto> {
     @Value("#{jobParameters['searchDate']}")
     private String searchDatetime;
     private String searchDate;
+    private String searchEndDate;
     private LocalDateTime searchEnd;
 
     private LocalDateTime currentTime;
@@ -72,7 +73,8 @@ public class GithubClientReader implements ItemReader<RepositoryBasicDto> {
     public void postConstruct() {
         var searchStart = LocalDateTime.parse(searchDatetime, dateTimeFormatter);
         searchDate = searchStart.format(dateFormatter);
-        searchEnd = searchStart.plusHours(1);
+        searchEnd = searchStart.plusHours(1).minusSeconds(1);
+        searchEndDate = searchEnd.format(dateFormatter);
         currentTime = searchStart.plusSeconds(0);
     }
 
@@ -96,7 +98,7 @@ public class GithubClientReader implements ItemReader<RepositoryBasicDto> {
                     Thread.currentThread().interrupt();
                 }
             }
-            retry++;
+             retry++;
             if (retry >= maxRetry) {
                 log.error("infinite cycle in while loop, for date {}", searchDatetime);
                 this.repositoryIterator = null;
@@ -109,13 +111,16 @@ public class GithubClientReader implements ItemReader<RepositoryBasicDto> {
     private PagedSearchIterable<GHRepository> getNextIterable() {
         var gitHub = tokenProvider.nextClient();
 
+        var dateFrom = searchDate;
+        var dateTo = searchDate;
         var startTime = currentTime;
         var endTime = currentTime.plusSeconds(secondDelta);
-        if (endTime.isBefore(startTime)) {
+        if (endTime.isAfter(searchEnd)) {
             endTime = searchEnd;
+            dateTo = searchEndDate;
         }
 
-        var searchString = String.format("%sT%s..%sT%s", searchDate, timeFormatter.format(startTime), searchDate, timeFormatter.format(endTime));
+        var searchString = String.format("%sT%s..%sT%s", dateFrom, timeFormatter.format(startTime), dateTo, timeFormatter.format(endTime));
         PagedSearchIterable<GHRepository> searchResult = gitHub.searchRepositories()
             .created(searchString)
             .list()
@@ -130,12 +135,12 @@ public class GithubClientReader implements ItemReader<RepositoryBasicDto> {
         }
 
         if(searchResult.getTotalCount() < githubSearchMax / 3) {
-            secondDelta = secondDelta * 3;
+            secondDelta = secondDelta * 2 ;
         }
 
         log.info("Github data initialized for date: {} and time: {} with search query result size: {}", searchDatetime, timeFormatter.format(currentTime), searchResult.getTotalCount());
 
-        currentTime = endTime;
+        currentTime = endTime.plusSeconds(1);
         return searchResult;
     }
 }
