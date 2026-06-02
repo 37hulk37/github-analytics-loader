@@ -58,6 +58,6 @@ public class MinioService {
             localStorageManager.store(fileName, repoString.getBytes(StandardCharsets.UTF_8));
         }
 
-        log.debug("Successfully saved file: {}", fileName);
+        log.debug("Successfully saved file: {} to S3", fileName);
     }
 }
